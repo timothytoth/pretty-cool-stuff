@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal TTS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background: #2b2b2b;
+            color: #ffffff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .terminal {
+            max-width: 900px;
+            margin: 0 auto;
+            border: 1px solid #ffffff;
+            padding: 20px;
+            background: #1a1a1a;
+        }
+
+        .header {
+            border-bottom: 1px solid #ffffff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.2em;
+            font-weight: normal;
+        }
+
+        .header p {
+            font-size: 0.9em;
+            color: #cccccc;
+            margin-top: 5px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            background: #1a1a1a;
+            color: #ffffff;
+            border: 1px solid #ffffff;
+            padding: 15px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            resize: vertical;
+            outline: none;
+        }
+
+        textarea::placeholder {
+            color: #888888;
+        }
+
+        .info {
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #cccccc;
+        }
+
+        .controls {
+            margin-top: 20px;
+            border-top: 1px solid #ffffff;
+            padding-top: 20px;
+        }
+
+        .voice-section, .speed-section {
+            margin-bottom: 20px;
+        }
+
+        .voice-section label, .speed-section label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: #444444;
+            outline: none;
+            border: 1px solid #ffffff;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #ffffff;
+            cursor: pointer;
+            border: 1px solid #ffffff;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #ffffff;
+            cursor: pointer;
+            border: 1px solid #ffffff;
+        }
+
+        .speed-value {
+            display: inline-block;
+            margin-left: 10px;
+            color: #ffffff;
+            font-weight: normal;
+        }
+
+        select {
+            width: 100%;
+            background: #1a1a1a;
+            color: #ffffff;
+            border: 1px solid #ffffff;
+            padding: 10px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        select option {
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            background: #1a1a1a;
+            color: #ffffff;
+            border: 1px solid #ffffff;
+            padding: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #ffffff;
+            color: #1a1a1a;
+        }
+
+        button:active {
+            background: #cccccc;
+        }
+
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        button:disabled:hover {
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ffffff;
+            font-size: 0.9em;
+        }
+
+        .blinking-cursor {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="header">
+            <h1>║ TERMINAL TEXT-TO-SPEECH SYSTEM ║</h1>
+            <p>First you copy it, then you paste it, and then you listen to it</p>
+        </div>
+
+        <textarea id="textInput" placeholder="Paste academic text, equations, or any content here...">In economics, the Cobb-Douglas production function is Y = A * L^α * K^β where Y is total production, L is labor input, K is capital input, and A is total factor productivity. When α + β = 1, we have constant returns to scale.</textarea>
+
+        <div class="info">
+            Characters: <span id="charCount">0</span> | 
+            Status: <span id="statusText">READY</span><span class="blinking-cursor">_</span>
+        </div>
+
+        <div class="controls">
+            <div class="voice-section">
+                <label for="voiceSelect">SELECT VOICE:</label>
+                <select id="voiceSelect"></select>
+            </div>
+
+            <div class="speed-section">
+                <label for="speedSlider">
+                    SPEED: <span class="speed-value" id="speedValue">1.0x</span>
+                </label>
+                <input type="range" id="speedSlider" min="0.7" max="1.5" step="0.1" value="1">
+            </div>
+
+            <div class="buttons">
+                <button id="speakBtn">[ SPEAK ]</button>
+                <button id="pauseBtn">[ PAUSE ]</button>
+                <button id="stopBtn">[ STOP ]</button>
+                <button id="cleanBtn">[ CLEAN TEXT ]</button>
+                <button id="clearBtn">[ CLEAR ]</button>
+            </div>
+        </div>
+
+        <div class="status" id="status">System initialized. Ready to speak.</div>
+    </div>
+
+    <script>
+        // Initialize elements
+        const textInput = document.getElementById('textInput');
+        const speakBtn = document.getElementById('speakBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const cleanBtn = document.getElementById('cleanBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const voiceSelect = document.getElementById('voiceSelect');
+        const speedSlider = document.getElementById('speedSlider');
+        const speedValue = document.getElementById('speedValue');
+        const status = document.getElementById('status');
+        const charCount = document.getElementById('charCount');
+        const statusText = document.getElementById('statusText');
+
+        // Initialize speech synthesis
+        const synth = window.speechSynthesis;
+        let voices = [];
+        let isPaused = false;
+
+        // Load available voices from your system
+        function loadVoices() {
+            voices = synth.getVoices();
+            voiceSelect.innerHTML = '';
+            
+            // Filter for English voices and add them
+            const englishVoices = voices.filter(voice => voice.lang.startsWith('en'));
+            
+            // If no English voices, use all voices
+            const voicesToShow = englishVoices.length > 0 ? englishVoices : voices;
+            
+            voicesToShow.forEach((voice, index) => {
+                const option = document.createElement('option');
+                option.value = voices.indexOf(voice);
+                option.textContent = `${voice.name} (${voice.lang})`;
+                voiceSelect.appendChild(option);
+            });
+        }
+
+        // Load voices when available (voices load asynchronously)
+        loadVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
+        // Update character count
+        function updateCharCount() {
+            charCount.textContent = textInput.value.length;
+        }
+        textInput.addEventListener('input', updateCharCount);
+        updateCharCount();
+
+        // Update speed slider value display
+        speedSlider.addEventListener('input', () => {
+            speedValue.textContent = speedSlider.value + 'x';
+        });
+
+        // Update status message
+        function updateStatus(message) {
+            status.textContent = message;
+        }
+
+        function setStatusText(text) {
+            statusText.textContent = text;
+        }
+
+        // Text preprocessing function to fix PDF copy-paste issues and remove ads
+        function preprocessText(text) {
+            // Remove standalone AD lines (must be first to catch line breaks)
+            text = text.replace(/^AD$/gm, '');
+            text = text.replace(/\nAD\n/g, '\n');
+            text = text.replace(/\nAD$/gm, '');
+            text = text.replace(/^AD\n/gm, '');
+            
+            // Remove common ad markers and promotional text
+            text = text.replace(/\bADVERTISEMENT\b/gi, '');
+            text = text.replace(/\bSponsored\b/gi, '');
+            
+            // Remove promotional phrases (case insensitive)
+            text = text.replace(/__(.*?)__/g, ''); // Remove __text between underscores__
+            text = text.replace(/Elevate Your.*?confidence\./gi, '');
+            text = text.replace(/Take advantage of.*?insights to help you invest with confidence\./gi, '');
+            text = text.replace(/\*\s*.*?\*\s*/g, ''); // Remove *bullet points*
+            
+            // Remove stock ticker patterns that repeat (QBTS -10.12% ▼)
+            text = text.replace(/[A-Z]{2,5}\s*-?\d+\.\d+%\s*[▼▲↓↑]/g, '');
+            
+            // Remove excessive symbols
+            text = text.replace(/[▼▲↓↑●•]/g, '');
+            
+            // Remove hyphenation at line breaks (prob-\nability → probability)
+            text = text.replace(/(\w)-\s*\n\s*(\w)/g, '$1$2');
+            
+            // Replace single line breaks with spaces (keeps paragraphs intact)
+            text = text.replace(/([^\n])\n([^\n])/g, '$1 $2');
+            
+            // Clean up multiple spaces
+            text = text.replace(/\s+/g, ' ');
+            
+            // Remove multiple blank lines (keep max 2 newlines = 1 blank line)
+            text = text.replace(/\n{3,}/g, '\n\n');
+            
+            // Fix common PDF artifacts
+            text = text.replace(/\s+([.,!?;:])/g, '$1'); // Remove space before punctuation
+            
+            return text.trim();
+        }
+
+        // Main speak function
+        function speak() {
+            // If already speaking and not paused, don't restart
+            if (synth.speaking && !isPaused) {
+                return;
+            }
+
+            // If paused, resume
+            if (isPaused) {
+                synth.resume();
+                isPaused = false;
+                setStatusText('SPEAKING');
+                updateStatus('Resumed playback');
+                pauseBtn.textContent = '[ PAUSE ]';
+                return;
+            }
+
+            // Get the text to speak and preprocess it
+            let text = textInput.value.trim();
+            
+            if (text === '') {
+                updateStatus('ERROR: No text to read. Please paste content first.');
+                return;
+            }
+            
+            // Clean up text for better reading
+            text = preprocessText(text);
+
+            // Create speech utterance with cleaned text
+            const utterance = new SpeechSynthesisUtterance(text);
+            const selectedVoice = voices[voiceSelect.value];
+            
+            // Configure utterance for more natural speech
+            utterance.voice = selectedVoice;
+            utterance.rate = parseFloat(speedSlider.value);
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            
+            // Add slight pauses at sentence boundaries for more natural flow
+            // The browser handles this better with proper punctuation
+            utterance.lang = 'en-US'; // Explicitly set language for better pronunciation
+
+            // Event handlers
+            utterance.onstart = () => {
+                setStatusText('SPEAKING');
+                updateStatus('Reading ' + text.length + ' characters...');
+                speakBtn.disabled = true;
+            };
+
+            utterance.onend = () => {
+                setStatusText('READY');
+                updateStatus('Finished reading. Ready for next input.');
+                speakBtn.disabled = false;
+                isPaused = false;
+                pauseBtn.textContent = '[ PAUSE ]';
+            };
+
+            utterance.onerror = (event) => {
+                setStatusText('ERROR');
+                updateStatus('ERROR: ' + event.error);
+                speakBtn.disabled = false;
+            };
+
+            // Start speaking
+            synth.speak(utterance);
+        }
+
+        // Pause/Resume function
+        function pause() {
+            if (synth.speaking && !isPaused) {
+                synth.pause();
+                isPaused = true;
+                setStatusText('PAUSED');
+                updateStatus('Playback paused');
+                pauseBtn.textContent = '[ RESUME ]';
+            } else if (isPaused) {
+                synth.resume();
+                isPaused = false;
+                setStatusText('SPEAKING');
+                updateStatus('Playback resumed');
+                pauseBtn.textContent = '[ PAUSE ]';
+            }
+        }
+
+        // Stop function
+        function stop() {
+            synth.cancel();
+            isPaused = false;
+            setStatusText('READY');
+            updateStatus('Playback stopped. Ready for new input.');
+            speakBtn.disabled = false;
+            pauseBtn.textContent = '[ PAUSE ]';
+        }
+
+        // Clear function
+        function clear() {
+            textInput.value = '';
+            updateCharCount();
+            stop();
+            updateStatus('Text cleared. System ready.');
+        }
+
+        // Clean text function - removes ads and formatting without speaking
+        function cleanText() {
+            const originalText = textInput.value.trim();
+            if (originalText === '') {
+                updateStatus('ERROR: No text to clean.');
+                return;
+            }
+            
+            const cleanedText = preprocessText(originalText);
+            textInput.value = cleanedText;
+            updateCharCount();
+            updateStatus('Text cleaned. Removed ads and formatting artifacts.');
+        }
+
+        // Event listeners
+        speakBtn.addEventListener('click', speak);
+        pauseBtn.addEventListener('click', pause);
+        stopBtn.addEventListener('click', stop);
+        cleanBtn.addEventListener('click', cleanText);
+        clearBtn.addEventListener('click', clear);
+
+        // Keyboard shortcut: Ctrl+Enter to speak
+        textInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                e.preventDefault();
+                speak();
+            }
+        });
+    </script>
+</body>
+</html>
