@@ -1,1 +1,1 @@
-simple, copy, paste, listen
+It's simple. copy, paste, listen
